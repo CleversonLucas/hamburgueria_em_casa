@@ -1,0 +1,92 @@
+.container {
+    flex: 1;
+}
+
+aside {
+    display: none;
+    background-color: #BFDBF7;
+    min-width: 350px;
+    height: 100vh;
+    position: fixed;
+    transition: all ease .5s;
+    overflow-x: hidden;
+}
+
+.cartArea {
+    padding: 20px;
+}
+
+.cartArea h1 {
+    text-align: center;
+}
+
+.cartDetails {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.cartItem {
+    font-size: 20px;
+}
+
+.cartQt {
+    display: flex;
+    line-height: 25px;
+}
+
+.actualQt {
+    background-color: white;
+    width: 25px;
+    text-align: center;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+}
+
+.cartQt button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    background-color: white;
+    font-size: 20px;
+}
+
+.cartMinus {
+    border-radius: 40% 0 0 40%;
+}
+
+.cartPlus {
+    border-radius: 0 40% 40% 0;
+}
+
+.subtotal {
+    font-size: 20px;
+}
+
+.cartValues {
+    display: block;
+    text-align: right;
+    font-size: 20px;
+}
+
+.cartTotal {
+    text-align: right;
+}
+
+.closeCart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    margin-bottom: 20px;
+    font-size: 25px;
+    width: 50px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.closeCart:hover {
+    cursor: pointer;
+    border: 1px solid red;
+}

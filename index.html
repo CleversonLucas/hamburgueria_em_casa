@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/cart.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,700;1,500;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+
+    <title>Burger em casa</title>
+</head>
+<body>
+    <div class="modalScreen">
+        <div class="modal">
+            <div class="closeButton">
+                <p onclick="closeModal()">❌</p>
+            </div>
+            <div class="burgerArea">
+                <img src="images/burger-banner.jpg" alt="">
+                <div class="burgerOptions">
+                    <div class="burgerDesc">
+                        <h1></h1>
+                        <p></p>
+                    </div>
+                    <div class="variationArea">
+                        <p class="variationBlue selected" onclick="selectBlue()"></p>
+                        <p class="variationRed" onclick="selectRed()"></p>
+                    </div>
+                    <div class="variationDesc">
+                        <p></p>
+                    </div>
+                </div>
+            </div>
+            <div class="values">
+                <div class="quantity">
+                    <p>Quantidade: </p>
+                    <button id="qtMinus">-</button>
+                    <div class="burgerQt">1</div>
+                    <button id="qtPlus">+</button>
+                </div>
+                <div class="burgerPrice">
+                    <p>R$ </p>
+                    <p class="total">00,00</p>
+                </div>
+            </div>
+        
+            <div class="addCart">
+                <button onclick="addToCart()">
+                    <span class="material-symbols-outlined">
+                        add_shopping_cart
+                        </span> Carrinho
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="images/burger-logo-icon.svg" alt="">
+            <div class="nav">
+                <p onclick="rollToMenu()">Faça seu pedido</p>
+                <p>Contato</p>
+                <p onclick="openCart()"><span class="material-symbols-outlined">
+                    shopping_cart
+                    </span>
+                    <span id="cartQt">+1</span></p>
+            </div>
+        </header>
+        <div class="banner">
+            <div class="event">
+                <div class="prop">
+                    <h1>BURGER EM CASA</h1>
+                    <P>Faça seu pedido e consuma na casa do Creh no dia programado.</P>
+                </div>
+                <div class="date">
+                    <p>Próxima data:</p>
+                    <p id="date">00/00/00</p>
+                </div>
+            </div>
+            <button onclick="rollToMenu()">Faça seu pedido</button>
+        </div>
+        <div class="menu">
+            <div class="menuDescription">
+                <p>Cada burger possui <strong>mais de uma variação</strong>.</p>
+                <p>Será do jeito que seu estômago mandar.</p>
+                <p>Escolha com sabedoria!</p>
+            </div>
+            <div class="menuOptions">
+                <div class="option1" onclick="openModal(0)">
+                    <h2>Shepard</h2>
+                    <p id="blueOption">- Paragon</p>
+                    <p id="redOption">- Renegado</p>
+                    <p>O clássico X-Salada em 2 versões badass</p>
+                </div>
+                <div class="option2" onclick="openModal(1)">
+                    <h2>Asari</h2>
+                    <p id="blueOption">- Liara <span id="smallName">T'Soni</span></p>
+                    <p id="redOption">- Justicar<span id="smallName">, Samara</span></p>
+                    <p>Defumado e apimentado... O mais sedutor dos burgers</p>
+                </div>
+                <div class="option3" onclick="openModal(2)">
+                    <h2>Krogan</h2>
+                    <p id="blueOption">- Grunt<span id="smallName">, o puro</span></p>
+                    <p id="redOption">- <span id="smallName">Urdnot</span> Wrex</p>
+                    <p>O poderoso Smash Burger em 2 versões altamente perigosas</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <div class="address">
+                <p>Evento a ser realizado no endereço abaixo:</p>
+                <p>Av. Prof. Oswaldo Walder, 194. Bairro Eldorado - Piracicaba/SP</p>
+            </div>
+            <div class="copyright">
+                <p>Site criado por <a href="">@CrehOne</a></p>
+            </div>
+        </footer>
+    </div>
+
+    <aside>
+        <div class="cartArea">
+            <p class="closeCart" onclick="closeCart()">❌</p>
+            <h1>Seu pedido</h1>
+            <div class="cart">
+                <div class="cartDetails">
+                    <div class="cartItem">P</div>
+                    <div class="cartQt">
+                        <button class="cartMinus">-</button>
+                        <div class="actualQt">0</div>
+                        <button class="cartPlus">+</button>
+                    </div>
+                    <div class="subtotal">R$ 00,00</div>
+                </div>
+                <div class="cartValues">
+                    <p>Total: R$ <span class="cartTotal">00,00</span></p>
+                    
+                <div class="cartOrder">
+                    <button>Finalizar pedido</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+    
+    <script src="menu.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

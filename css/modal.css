@@ -1,0 +1,202 @@
+.modalScreen {
+    display: none;
+    position: fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    right:0;
+    background-color:rgba(255, 255, 255, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal {
+    background-color: orange;
+    width: 900px;
+    padding: 30px;
+    border-radius: 25px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.31);
+}
+
+.closeButton {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    margin-bottom: 20px;
+}
+
+.closeButton p {
+    font-size: 25px;
+    width: 40px;
+    line-height: 40px;
+    background-color: white;
+    text-align: center;
+    border-radius: 50%;
+}
+
+.closeButton p:hover {
+    cursor: pointer;
+    border: 1px solid black;
+}
+
+.burgerArea {
+    display: flex;
+    width: 80%;
+    min-height: 80% ;
+    justify-content: center;
+    
+}
+
+.burgerArea img {
+    width: 250px;
+    height: 250px;
+    border: 5px solid #022B3A;
+    border-radius: 15px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.31);
+}
+
+.burgerOptions {
+    padding-left: 20px;
+}
+
+.burgerOptions h1 {
+    color: #022B3A;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.314);
+}
+
+.burgerOptions p {
+    margin-top: 20px;
+    text-align: justify;
+}
+
+.variationArea {
+    display: flex;
+    justify-content: center;
+}
+
+.variationBlue {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    width: 150px;
+    background-color: #1F7A8C;
+    color: #BFDBF7;
+    border: 5px solid #1F7A8C;
+    border-radius: 10px;
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.31);
+}
+
+.variationBlue:hover {
+    background-image: linear-gradient(to right, #1F7A8C, white);
+    color: #1F7A8C;
+}
+
+.variationRed {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    width: 130px;
+    background-color: #e02a24;
+    color: #efaaa9;
+    border: 5px solid #e02a24;
+    border-radius: 10px;
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+    margin-left: 10px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.31);
+}
+.variationRed:hover {
+    background-image: linear-gradient(to left, #e02a24, white);
+    color: #e02a24;
+}
+
+.variationDesc p {
+    font-size: 20px;
+}
+
+.selected {
+    background-image: linear-gradient(to right, yellow, white, white, white, yellow);
+    color: goldenrod;
+}
+
+.values {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+}
+
+.quantity {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.quantity p {
+    margin: 10px;
+}
+
+.quantity .burgerQt {
+    background-color: white;
+    width: 25px;
+    text-align: center;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+}
+
+.quantity button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    background-color: #1F7A8C;
+    font-size: 20px;
+}
+
+#qtMinus {
+    border-radius: 40% 0 0 40%;
+}
+
+#qtPlus {
+    border-radius: 0 40% 40% 0;
+}
+
+.quantity button:hover {
+    cursor: pointer;
+}
+
+.burgerPrice {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.burgerPrice p {
+    margin: 5px;
+}
+
+.addCart {
+    display: flex;
+    justify-content: center;
+}
+
+.addCart button {
+    width: 200px;
+    height: 40px;
+    font-size: 22px;
+    border-radius: 10px;
+    background-image: linear-gradient(to right, yellow, white, white, white, yellow);
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.31);
+}
+
+.addCart button:hover {
+    border-color: goldenrod;
+    box-shadow: 2px 2px 8px yellow;
+    color: goldenrod;
+}
+
