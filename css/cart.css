@@ -10,6 +10,10 @@ aside {
     position: fixed;
     transition: all ease .5s;
     overflow-x: hidden;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+    overflow-y: auto;
 }
 
 .cartArea {
@@ -17,14 +21,16 @@ aside {
 }
 
 .cartArea h1 {
+    font-size: 30px;
     text-align: center;
+    margin: 0 0 25px 0;
 }
 
-.cartDetails {
+/*.cartDetails {
     display: flex;
     justify-content: space-between;
     margin: 20px 0;
-}
+}*/
 
 .cartItem {
     font-size: 20px;
@@ -89,4 +95,187 @@ aside {
 .closeCart:hover {
     cursor: pointer;
     border: 1px solid red;
+}
+
+.cartItems {
+    margin-top: 20px;
+}
+
+.cartDetails {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    align-items: center;
+    gap: 12px;
+    margin: 15px 0;
+    padding: 0 0 15px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.cartItem {
+    min-width: 0;
+    font-size: 19px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.cartQt {
+    display: flex;
+    align-items: center;
+    line-height: 25px;
+}
+
+.cartQt button {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background-color: white;
+    border: 1px solid #022B3A;
+    font-size: 18px;
+    transition: 0.2s;
+}
+
+.cartQt button:hover {
+    background-color: #022B3A;
+    color: white;
+}
+
+.actualQt {
+    width: 32px;
+    height: 28px;
+    background-color: white;
+    text-align: center;
+    line-height: 28px;
+    border-top: 1px solid #022B3A;
+    border-bottom: 1px solid #022B3A;
+}
+
+.subtotal {
+    font-size: 17px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.cartRemove {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background-color: transparent;
+    color: #e02a24;
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 28px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.cartRemove:hover {
+    color: #022B3A;
+}
+
+.cartValues {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 2px solid #022B3A;
+    text-align: right;
+    font-size: 22px;
+}
+
+.cartValues p {
+    margin: 0;
+}
+
+.cartTotal {
+    font-weight: bold;
+}
+
+.cartOrder {
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.cartOrder button {
+    width: 220px;
+    height: 45px;
+    border: 1px solid #022B3A;
+    border-radius: 10px;
+    background-color: #e02a24;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.cartOrder button:hover {
+    background-color: #022B3A;
+}
+
+@media (max-width: 600px) {
+
+    aside {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        top: 0;
+        right: 0;
+    }
+
+    .cartArea {
+        width: 100%;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+
+    .cartArea h1 {
+        font-size: 26px;
+        margin-bottom: 20px;
+    }
+
+    .cartDetails {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px;
+        margin: 15px 0;
+    }
+
+    .cartItem {
+        grid-column: 1 / -1;
+        font-size: 18px;
+    }
+
+    .cartQt {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .subtotal {
+        grid-column: 2;
+        grid-row: 2;
+        align-self: center;
+    }
+
+    .cartRemove {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+    }
+
+    .cartValues {
+        font-size: 20px;
+    }
+
+    .cartOrder button {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+.emptyCart {
+    text-align: center;
+    margin: 40px 0;
+    font-size: 22px;
+    color: #022B3A;
 }
