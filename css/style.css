@@ -1381,6 +1381,8 @@ header .nav {
         padding: 24px 20px;
 
         border-radius: 7px;
+
+        min-height: 0;
     }
 
 
@@ -1389,7 +1391,7 @@ header .nav {
     .option3 h2 {
         margin-bottom: 20px;
 
-        font-size: 38px;
+        font-size: 36px;
 
         text-align: left;
     }
@@ -1439,5 +1441,200 @@ header .nav {
                 rgba(230, 59, 72, 0.11),
                 rgba(230, 59, 72, 0.025)
             );
+    }
+}
+
+/* =========================================
+   AJUSTES FINAIS DOS CARDS
+   ========================================= */
+
+.option1,
+.option2,
+.option3 {
+    min-height: 330px;
+}
+
+/* nome do burger */
+.option1 h2,
+.option2 h2,
+.option3 h2 {
+    display: block;
+
+    margin: 0 0 24px;
+
+    color: #ffffff;
+
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+
+    text-align: left;
+
+    text-shadow: none;
+}
+
+/* aproxima descrição das opções */
+.option1 > p,
+.option2 > p,
+.option3 > p {
+    flex: 0;
+
+    margin-top: 0;
+}
+
+/* status geral fica no final */
+.menuAvailability {
+    margin-top: auto;
+    padding-top: 18px;
+}
+
+/* =========================================
+   FASE 8.3 - RODAPÉ
+   ========================================= */
+
+.address {
+    position: relative;
+
+    width: 100%;
+
+    padding: 45px 7%;
+
+    color: var(--text-light);
+
+    background:
+        radial-gradient(
+            circle at 10% 50%,
+            rgba(53, 200, 240, 0.07),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 90% 50%,
+            rgba(230, 59, 72, 0.06),
+            transparent 28%
+        ),
+        #050f16;
+
+    border-top: 1px solid rgba(53, 200, 240, 0.18);
+
+    font-size: inherit;
+}
+
+
+/* linha superior Paragon / Renegade */
+
+.address::before {
+    content: '';
+
+    position: absolute;
+
+    top: 0;
+    left: 7%;
+
+    width: 160px;
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--paragon),
+            var(--renegade)
+        );
+}
+
+
+/* ---------- TÍTULO ---------- */
+
+.addressLabel {
+    margin-bottom: 18px;
+
+    color: var(--text-muted);
+
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+
+/* ---------- ENDEREÇO ---------- */
+
+.addressInfo {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+}
+
+.addressInfo .material-symbols-outlined {
+    color: var(--gold);
+
+    font-size: 30px;
+}
+
+.addressInfo p {
+    margin: 0;
+
+    color: #e5eff2;
+
+    font-size: 20px;
+    line-height: 1.45;
+}
+
+
+/* =========================================
+   COPYRIGHT
+   ========================================= */
+
+.copyright {
+    width: 100%;
+
+    padding: 14px 7%;
+
+    color: #71868f;
+    background: #030a0e;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.035);
+
+    font-size: 14px;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+
+    .address {
+        padding: 35px 24px;
+    }
+
+    .address::before {
+        left: 24px;
+
+        width: 120px;
+    }
+
+    .addressLabel {
+        margin-bottom: 16px;
+
+        font-size: 13px;
+    }
+
+    .addressInfo {
+        align-items: flex-start;
+
+        gap: 11px;
+    }
+
+    .addressInfo .material-symbols-outlined {
+        margin-top: 2px;
+
+        font-size: 26px;
+    }
+
+    .addressInfo p {
+        font-size: 18px;
+    }
+
+    .copyright {
+        padding: 12px 24px;
+
+        font-size: 13px;
     }
 }
