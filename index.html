@@ -81,11 +81,10 @@
                     <P>Faça seu pedido e consuma na casa do Creh no dia programado.</P>
                 </div>
                 <div class="date">
-                    <p>Próxima data:</p>
+                    <p>Próxima missão:</p>
                     <p id="date">00/00/00</p>
                 </div>
             </div>
-            <button onclick="rollToMenu()">Faça seu pedido</button>
         </div>
         <div class="menu">
             <div class="menuDescription">
@@ -95,22 +94,43 @@
             </div>
             <div class="menuOptions">
                 <div class="option1" onclick="openModal(0)">
-                    <h2>Shepard</h2>
-                    <p class="blueOption">- Paragon</p>
-                    <p class="redOption">- Renegado</p>
+                    <div class="menuVariation">
+                        <p class="menuVariationItem paragonSide" id="menuVariation-0-0">
+                            Paragon
+                        </p>
+                    
+                        <p class="menuVariationItem renegadeSide" id="menuVariation-0-1">
+                            Renegado
+                        </p>
+                    </div>
                     <p>O clássico X-Salada em 2 versões badass</p>
+                    <div class="menuAvailability" id="menuAvailability-0"></div>
                 </div>
                 <div class="option2" onclick="openModal(1)">
-                    <h2>Asari</h2>
-                    <p class="blueOption">- Liara <span class="smallName">T'Soni</span></p>
-                    <p class="redOption">- Justicar<span class="smallName">, Samara</span></p>
+                    <div class="menuVariation">
+                        <p class="menuVariationItem paragonSide" id="menuVariation-1-0">
+                            Liara
+                        </p>
+                    
+                        <p class="menuVariationItem renegadeSide" id="menuVariation-1-1">
+                            Justicar
+                        </p>
+                    </div>
                     <p>Defumado e apimentado... O mais sedutor dos burgers</p>
+                    <div class="menuAvailability" id="menuAvailability-1"></div>
                 </div>
                 <div class="option3" onclick="openModal(2)">
-                    <h2>Krogan</h2>
-                    <p class="blueOption">- Grunt<span class="smallName">, o puro</span></p>
-                    <p class="redOption">- <span class="smallName">Urdnot</span> Wrex</p>
+                    <div class="menuVariation">
+                        <p class="menuVariationItem paragonSide" id="menuVariation-2-0">
+                            Grunt
+                        </p>
+                    
+                        <p class="menuVariationItem renegadeSide" id="menuVariation-2-1">
+                            Wrex
+                        </p>
+                    </div>
                     <p>O poderoso Smash Burger em 2 versões altamente perigosas</p>
+                    <div class="menuAvailability" id="menuAvailability-2"></div>
                 </div>
             </div>
         </div>

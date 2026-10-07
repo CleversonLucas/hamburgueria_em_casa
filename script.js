@@ -523,4 +523,78 @@ function sendOrderToWhatsApp() {
     window.open(whatsappUrl, '_blank')
 }
 
+function updateMenuAvailability() {
+    for (let productIndex = 0; productIndex < menuJson.length; productIndex++) {
+
+        let product = menuJson[productIndex]
+
+        let availableCount = 0
+
+        for (
+            let variationIndex = 0;
+            variationIndex < product.variation.length;
+            variationIndex++
+        ) {
+
+            let variationElement = $(
+                `#menuVariation-${productIndex}-${variationIndex}`
+            )
+
+            if (!variationElement) {
+                continue
+            }
+
+            let isAvailable = product.available[variationIndex]
+
+            variationElement.classList.toggle(
+                'menuUnavailable',
+                !isAvailable
+            )
+
+            if (isAvailable) {
+                availableCount++
+
+                variationElement.innerHTML =
+                    product.variation[variationIndex]
+            } else {
+                variationElement.innerHTML = `
+                    ${product.variation[variationIndex]}
+                    <span>INDISPONÍVEL</span>
+                `
+            }
+        }
+
+        let availabilityElement =
+            $(`#menuAvailability-${productIndex}`)
+
+        if (!availabilityElement) {
+            continue
+        }
+
+        let card = availabilityElement.closest(
+            '.option1, .option2, .option3'
+        )
+
+        if (availableCount === 0) {
+            availabilityElement.innerHTML =
+                'TEMPORARIAMENTE INDISPONÍVEL'
+
+            availabilityElement.classList.add('show')
+
+            if (card) {
+                card.classList.add('productUnavailable')
+            }
+        } else {
+            availabilityElement.innerHTML = ''
+            availabilityElement.classList.remove('show')
+
+            if (card) {
+                card.classList.remove('productUnavailable')
+            }
+        }
+    }
+}
+
+
+updateMenuAvailability()
 updateCartQt()
