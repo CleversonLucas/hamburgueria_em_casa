@@ -29,6 +29,35 @@ const restaurantPhone = '5519997980495'
 
 let cartList = []
 
+let currentOrderId = null
+
+function generateOrderId() {
+    const now = new Date()
+
+    const pad = number => String(number).padStart(2, '0')
+
+    const date =
+        String(now.getFullYear()).slice(-2) +
+        pad(now.getMonth() + 1) +
+        pad(now.getDate())
+
+    const time =
+        pad(now.getHours()) +
+        pad(now.getMinutes()) +
+        pad(now.getSeconds())
+
+    const randomValues = new Uint8Array(4)
+    crypto.getRandomValues(randomValues)
+
+    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+    const randomCode = Array.from(randomValues, value =>
+        characters[value % characters.length]
+    ).join('')
+
+    return `${date}-${time}-${randomCode}`
+}
+
 let burgerQt = 1
 
 let key = 0
@@ -197,6 +226,8 @@ function addToCart() {
         return
     }
 
+    currentOrderId = null
+
     variation = menuJson[key].variation[variationIndex]
     price = menuJson[key].prices[variationIndex]
 
@@ -272,6 +303,7 @@ function updateCart() {
 }
 
 function cartPlus(index) {
+    currentOrderId = null
     cartList[index].quantity++
 
     updateCart()
@@ -279,6 +311,7 @@ function cartPlus(index) {
 }
 
 function cartMinus(index) {
+    currentOrderId = null
     if (cartList[index].quantity > 1) {
         cartList[index].quantity--
     }
@@ -288,6 +321,7 @@ function cartMinus(index) {
 }
 
 function removeFromCart(index) {
+    currentOrderId = null
     cartList.splice(index, 1)
 
     updateCart()
@@ -481,7 +515,8 @@ function createOrderMessage() {
     let total = 0
 
     message += '🍔 *BURGER EM CASA*\n\n'
-    message += '*NOVO PEDIDO*\n\n'
+    message += '*NOVO PEDIDO*\n'
+    message += `*ID: #${currentOrderId}*\n\n`
 
     message += `*Cliente:* ${customerName.value.trim()}\n`
     message += `*WhatsApp:* ${customerPhone.value.trim()}\n`
@@ -511,8 +546,13 @@ function createOrderMessage() {
 
     return message
 }
+    
 
 function sendOrderToWhatsApp() {
+    if (currentOrderId === null) {
+        currentOrderId = generateOrderId()
+    }
+
     let message = createOrderMessage()
 
     let encodedMessage = encodeURIComponent(message)
