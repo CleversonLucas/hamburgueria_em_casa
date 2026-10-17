@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Burger em Casa | Painel administrativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script defer src="admin.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div><div class="eyebrow">NORMANDY // CENTRAL DE OPERAÇÕES</div><h1>BURGER <span>EM CASA</span></h1><p>Painel administrativo de pedidos</p></div>
+      <div class="header-actions"><span id="sessionEmail" class="session-email"></span><button id="logoutButton" type="button" class="button secondary" hidden>Sair</button></div>
+    </header>
+    <section id="loginSection" class="login-panel panel">
+      <div class="section-tag">ACESSO RESTRITO</div>
+      <h2>Identificação do comandante</h2>
+      <form id="loginForm">
+        <label for="adminEmail">E-mail</label><input id="adminEmail" type="email" autocomplete="username" required>
+        <label for="adminPassword">Senha</label><input id="adminPassword" type="password" autocomplete="current-password" required>
+        <button id="loginButton" type="submit" class="button primary">Entrar no painel</button>
+      </form>
+      <p id="loginMessage" class="message" role="status" aria-live="polite"></p>
+    </section>
+    <section id="dashboardSection" hidden>
+      <nav class="admin-tabs" aria-label="Seções do painel"><button class="button primary" type="button" id="ordersTab" aria-current="page">Pedidos</button><button class="button secondary" type="button" id="productsTab">Gerenciar cardápio</button></nav>
+      <div id="ordersView">
+      <div class="toolbar panel"><div><div class="section-tag">MONITORAMENTO</div><h2>Pedidos recebidos</h2></div><div class="toolbar-actions"><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Todos</option></select><button type="button" id="refreshButton" class="button primary">Atualizar pedidos</button></div></div>
+      <div class="monitor-bar panel">
+        <div class="monitor-info"><span class="live-dot" aria-hidden="true"></span><span>Verificação automática a cada 15 segundos</span><small id="lastCheck">Aguardando primeira consulta...</small></div>
+        <div class="monitor-controls"><span id="newOrdersCount" class="new-count">0 novos</span><button id="soundButton" class="button secondary" type="button" aria-pressed="false">🔇 Ativar som</button></div>
+      </div>
+      <p id="dashboardMessage" class="message" role="status" aria-live="polite"></p>
+      <div id="newOrdersAlert" class="new-orders-alert" role="status" aria-live="polite" hidden></div>
+      <div class="summary"><div class="panel stat"><small>PEDIDOS CARREGADOS</small><strong id="totalOrders">0</strong></div><div class="panel stat"><small>VALOR DOS PEDIDOS CARREGADOS</small><strong id="totalValue">R$ 0,00</strong></div></div>
+      <div class="columns"><section class="panel"><h3>Lista de pedidos</h3><div id="ordersList" class="orders-list"><p class="muted">Nenhum pedido carregado.</p></div></section><section class="panel"><h3>Detalhes da missão</h3><div id="orderDetails" class="details"><p class="muted">Selecione um pedido para visualizar os detalhes.</p></div></section></div>
+      <p class="hint">Exibindo os 100 pedidos mais recentes. Selecione um pedido para atualizar seu status. As mudanças são registradas no Supabase.</p>
+      </div>
+      <section id="productsView" class="panel" hidden>
+        <div class="products-heading"><div><div class="section-tag">CONTROLE DE ESTOQUE // CARDÁPIO</div><h2>Preços e disponibilidade</h2></div><button class="button secondary" id="reloadProductsButton" type="button">Atualizar produtos</button></div>
+        <p class="hint">Os preços e a disponibilidade ficam no Supabase. O site público carrega os valores oficiais quando o cardápio é atualizado.</p>
+        <p id="productsMessage" class="message" role="status" aria-live="polite"></p>
+        <div id="productsList" class="product-grid"></div>
+      </section>
+    </section>
+  </main>
+<!-- Som só é habilitado depois do clique do administrador. -->
+</body>
+</html>

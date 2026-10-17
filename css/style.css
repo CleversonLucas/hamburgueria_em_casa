@@ -1638,3 +1638,56 @@ header .nav {
         font-size: 13px;
     }
 }
+
+/* FASE 13 — Estado compacto da sincronização do cardápio */
+.catalogFeedback {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    min-height: 28px;
+    margin: 0 0 14px;
+}
+.catalogStatus {
+    margin: 0;
+    color: #9eb8c2;
+    font-size: 15px;
+    line-height: 1.35;
+    letter-spacing: .15px;
+}
+.catalogStatusSuccess {
+    color: #9eb8c2;
+}
+.catalogStatusLoading {
+    color: #bcecf7;
+}
+.catalogStatusError {
+    color: #ffb9ac;
+}
+.catalogRetryButton {
+    min-height: 38px;
+    padding: 7px 16px;
+    border: 1px solid rgba(53, 200, 240, .55);
+    border-radius: 5px;
+    color: #d8f4fc;
+    background: rgba(53, 200, 240, .10);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.catalogRetryButton:hover:not(:disabled) {
+    border-color: #35c8f0;
+    background: rgba(53, 200, 240, .20);
+}
+.catalogRetryButton[hidden] {
+    display: none !important;
+}
+@media (max-width: 600px) {
+    .catalogFeedback {
+        margin-bottom: 12px;
+    }
+    .catalogStatus {
+        font-size: 14px;
+    }
+}

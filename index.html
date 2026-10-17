@@ -66,8 +66,7 @@
         <header>
             <img src="images/burger-logo-icon.svg" alt="">
             <div class="nav">
-                <p onclick="rollToMenu()">Faça seu pedido</p>
-                <p>Contato</p>
+                <p onclick="rollToMenu()">Iniciar pedido</p>
                 <p onclick="openCart()"><span class="material-symbols-outlined">
                     shopping_cart
                     </span>
@@ -78,7 +77,7 @@
             <div class="event">
                 <div class="prop">
                     <h1>BURGER EM CASA</h1>
-                    <P>Faça seu pedido e consuma na casa do Creh no dia programado.</P>
+                    <P>Prepare-se para o melhor burger da galáxia.</P>
                 </div>
                 <div class="date">
                     <p>Próxima missão:</p>
@@ -88,9 +87,17 @@
         </div>
         <div class="menu">
             <div class="menuDescription">
-                <p>Cada burger possui <strong>mais de uma variação</strong>.</p>
-                <p>Será do jeito que seu estômago mandar.</p>
-                <p>Escolha com sabedoria!</p>
+                <p>Cada burger possui <strong>variações exclusivas</strong>, com combinações pensadas para atender as mais diferentes civilizações.</p>
+                <p>Escolha a que mais combina com a sua missão e monte seu pedido</p>
+            </div>
+            <div class="catalogFeedback" aria-live="polite">
+                <p id="catalogStatus" class="catalogStatus" role="status">
+                    Consultando cardápio oficial...
+                </p>
+                <button id="catalogRetryButton" class="catalogRetryButton"
+                    type="button" onclick="refreshCatalog()" hidden>
+                    Tentar novamente
+                </button>
             </div>
             <div class="menuOptions">
                 <div class="option1" onclick="openModal(0)">
@@ -104,7 +111,7 @@
                             Renegado
                         </p>
                     </div>
-                    <p>O clássico X-Salada em 2 versões badass</p>
+                    <p>Um clássico em duas abordagens: preciso, equilibrado e pronto para qualquer missão.</p>
                     <div class="menuAvailability" id="menuAvailability-0"></div>
                 </div>
                 <div class="option2" onclick="openModal(1)">
@@ -118,7 +125,7 @@
                             Justicar
                         </p>
                     </div>
-                    <p>Defumado e apimentado... O mais sedutor dos burgers</p>
+                    <p>Sofisticado e envolvente, com personalidade marcante e um toque de intensidade.</p>
                     <div class="menuAvailability" id="menuAvailability-1"></div>
                 </div>
                 <div class="option3" onclick="openModal(2)">
@@ -132,7 +139,7 @@
                             Wrex
                         </p>
                     </div>
-                    <p>O poderoso Smash Burger em 2 versões altamente perigosas</p>
+                    <p>Potência máxima em formato smash: intenso, robusto e sem espaço para cautela.</p>
                     <div class="menuAvailability" id="menuAvailability-2"></div>
                 </div>
             </div>
@@ -218,6 +225,14 @@
 
                 <button
                     type="button"
+                    id="shareWhatsAppButton"
+                    onclick="sendConfirmedOrderToWhatsApp()"
+                >
+                    Enviar cópia pelo WhatsApp (opcional)
+                </button>
+
+                <button
+                    type="button"
                     id="newOrderButton"
                     onclick="startNewOrder()"
                 >
@@ -278,6 +293,7 @@
 
             </div>
 
+            <p id="checkoutCatalogStatus" role="alert" style="display: none; color: #e02a24; font-weight: bold; margin: 12px 0;"></p>
             <div class="checkoutSummary">
 
                 <h2>Resumo do pedido</h2>

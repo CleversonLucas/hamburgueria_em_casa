@@ -30,12 +30,129 @@ const restaurantPhone = '5519997980495'
 const CREATE_ORDER_URL =
     'https://drtlghafqplrjtafczsg.supabase.co/functions/v1/create-order'
 
+const SUPABASE_URL = 'https://drtlghafqplrjtafczsg.supabase.co'
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_1wpk2x4aW66NANfoMP6JIA_2hhkSE9w'
+const PRODUCTS_URL = `${SUPABASE_URL}/rest/v1/products?select=id,name,variation,price,available&order=id.asc`
+
+let catalogReady = false
+let catalogLoading = false
+let catalogPromise = null
+let catalogError = ''
+
+
 let cartList = []
 
 let currentOrderId = null
 let currentRequestKey = null
 let orderSubmitting = false
 let orderConfirmed = false
+let requestFingerprint = null
+let confirmedOrder = null
+
+function showCatalogStatus(message, isError = false) {
+    const el = $('#catalogStatus')
+    const retryButton = $('#catalogRetryButton')
+    if (!el) return
+
+    el.textContent = message
+    el.classList.toggle('catalogStatusError', isError)
+    el.classList.toggle('catalogStatusLoading', catalogLoading && !isError)
+    el.classList.toggle('catalogStatusSuccess', catalogReady && !isError)
+
+    // Exibe a ação de repetir apenas se a consulta falhar.
+    if (retryButton) {
+        retryButton.hidden = !isError
+        retryButton.disabled = catalogLoading
+    }
+}
+
+function updateCheckoutCatalogStatus() {
+    const el = $('#checkoutCatalogStatus')
+    if (!el) return
+    const blocked = cartList.some(item => !isProductAvailable(item.productId))
+    el.textContent = !catalogReady
+        ? 'Cardápio indisponível. Aguarde ou tente atualizar antes de confirmar.'
+        : blocked
+            ? 'Seu carrinho contém um produto indisponível. Remova-o para continuar.'
+            : ''
+    el.style.display = el.textContent ? 'block' : 'none'
+}
+
+function getMenuEntry(productId) {
+    for (const product of menuJson) {
+        const i = product.productIds.indexOf(Number(productId))
+        if (i !== -1) return { product, index: i }
+    }
+    return null
+}
+
+function isProductAvailable(productId) {
+    const entry = getMenuEntry(productId)
+    return !!(catalogReady && entry && entry.product.available[entry.index])
+}
+
+function syncCartWithCatalog() {
+    for (const item of cartList) {
+        const entry = getMenuEntry(item.productId)
+        if (entry) item.price = entry.product.prices[entry.index]
+    }
+    updateCart()
+    updateCheckout()
+    updateCheckoutCatalogStatus()
+}
+
+async function refreshCatalog() {
+    if (catalogPromise) return catalogPromise
+    catalogLoading = true
+    catalogReady = false
+    showCatalogStatus('Consultando preços e disponibilidade no Supabase...')
+    updateMenuAvailability()
+    updateCheckoutCatalogStatus()
+
+    catalogPromise = (async () => {
+        try {
+            const response = await fetch(PRODUCTS_URL, {
+                headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Accept: 'application/json' },
+                cache: 'no-store'
+            })
+            if (!response.ok) throw new Error(`Falha HTTP ${response.status}`)
+            const products = await response.json()
+            if (!Array.isArray(products)) throw new Error('Formato de cardápio inválido')
+            const byId = new Map(products.map(p => [Number(p.id), p]))
+            const expectedIds = menuJson.flatMap(p => p.productIds)
+            if (!expectedIds.every(id => byId.has(id))) throw new Error('Produtos ausentes no banco')
+            for (const id of expectedIds) {
+                const row = byId.get(id)
+                if (!Number.isFinite(Number(row.price)) || Number(row.price) < 0 ||
+                    typeof row.available !== 'boolean') {
+                    throw new Error('Dados de produto inválidos')
+                }
+            }
+            for (const family of menuJson) {
+                family.productIds.forEach((id, i) => {
+                    const row = byId.get(id)
+                    family.prices[i] = Number(row.price)
+                    family.available[i] = row.available
+                })
+            }
+            catalogReady = true
+            catalogError = ''
+            showCatalogStatus('Preços e disponibilidade atualizados.')
+        } catch (error) {
+            catalogError = 'Não foi possível atualizar o cardápio.'
+            console.error('Erro ao consultar produtos:', error)
+            showCatalogStatus('Não foi possível carregar o cardápio.', true)
+        } finally {
+            catalogLoading = false
+            updateMenuAvailability()
+            if (modal.style.display === 'flex') updateModal(key)
+            syncCartWithCatalog()
+            catalogPromise = null
+        }
+        return catalogReady
+    })()
+    return catalogPromise
+}
 
 function setConfirmButtonLoading(loading) {
     const button = document.querySelector('.confirmOrder')
@@ -49,38 +166,20 @@ function setConfirmButtonLoading(loading) {
 }
 
 function getRequestKey() {
-    if (currentRequestKey === null) {
+    // Mesmos dados mantêm a chave, inclusive em tentativas repetidas.
+    const fingerprint = JSON.stringify({
+        customer_name: customerName.value.trim(),
+        customer_phone: customerPhone.value.replace(/\D/g, ''),
+        payment_method: paymentMethod.value,
+        notes: orderNotes.value.trim(),
+        items: getOrderItems()
+    })
+
+    if (!currentRequestKey || requestFingerprint !== fingerprint) {
         currentRequestKey = crypto.randomUUID()
+        requestFingerprint = fingerprint
     }
-
     return currentRequestKey
-}
-
-function generateOrderId() {
-    const now = new Date()
-
-    const pad = number => String(number).padStart(2, '0')
-
-    const date =
-        String(now.getFullYear()).slice(-2) +
-        pad(now.getMonth() + 1) +
-        pad(now.getDate())
-
-    const time =
-        pad(now.getHours()) +
-        pad(now.getMinutes()) +
-        pad(now.getSeconds())
-
-    const randomValues = new Uint8Array(4)
-    crypto.getRandomValues(randomValues)
-
-    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-
-    const randomCode = Array.from(randomValues, value =>
-        characters[value % characters.length]
-    ).join('')
-
-    return `${date}-${time}-${randomCode}`
 }
 
 let burgerQt = 1
@@ -105,9 +204,9 @@ function openModal(e) {
     variationBlue.classList.remove('selected')
     variationRed.classList.remove('selected')
 
-    if (menuJson[key].available[0]) {
+    if (catalogReady && menuJson[key].available[0]) {
         variationBlue.classList.add('selected')
-    } else if (menuJson[key].available[1]) {
+    } else if (catalogReady && menuJson[key].available[1]) {
         variationRed.classList.add('selected')
     }
 
@@ -170,7 +269,8 @@ function updateAvailability() {
 
     let addButton = $('.addCart button')
 
-    if (!blueAvailable && !redAvailable) {
+    const selectedIndex = variationRed.classList.contains('selected') ? 1 : 0
+    if (!catalogReady || !menuJson[key].available[selectedIndex]) {
         addButton.disabled = true
         addButton.innerHTML = 'Indisponível'
         addButton.classList.add('disabled')
@@ -187,7 +287,7 @@ function updateAvailability() {
 }
 
 function selectBlue() {
-    if (!menuJson[key].available[0]) {
+    if (!catalogReady || !menuJson[key].available[0]) {
         return
     }
 
@@ -198,7 +298,7 @@ function selectBlue() {
 }
 
 function selectRed() {
-    if (!menuJson[key].available[1]) {
+    if (!catalogReady || !menuJson[key].available[1]) {
         return
     }
 
@@ -220,7 +320,7 @@ $('#qtMinus').addEventListener('click', () => {
 })
 
 $('#qtPlus').addEventListener('click', () => {
-    burgerQt++
+    if (burgerQt < 50) burgerQt++
     $('.burgerQt').innerHTML = burgerQt
 })
 
@@ -235,7 +335,7 @@ function closeCart() {
 }
 
 function addToCart() {
-    if (orderSubmitting || orderConfirmed) {
+    if (orderSubmitting || orderConfirmed || !catalogReady || catalogLoading) {
         return
     }
 
@@ -258,6 +358,7 @@ function addToCart() {
     currentOrderId = null
 
     currentRequestKey = null
+    requestFingerprint = null
 
     variation = menuJson[key].variation[variationIndex]
     price = menuJson[key].prices[variationIndex]
@@ -268,7 +369,7 @@ function addToCart() {
     )
 
     if (existingItem) {
-        existingItem.quantity += burgerQt
+        existingItem.quantity = Math.min(50, existingItem.quantity + burgerQt)
     } else {
         cartList.push({
             id: menuJson[key].id,
@@ -335,12 +436,14 @@ function updateCart() {
 }
 
 function cartPlus(index) {
-    if (orderSubmitting || orderConfirmed) {
+    if (orderSubmitting || orderConfirmed || !catalogReady || catalogLoading) {
         return
     }
 
     currentOrderId = null
     currentRequestKey = null
+    requestFingerprint = null
+    if (cartList[index].quantity >= 50) return
     cartList[index].quantity++
 
     updateCart()
@@ -348,13 +451,14 @@ function cartPlus(index) {
 }
 
 function cartMinus(index) {
-    if (orderSubmitting || orderConfirmed) {
+    if (orderSubmitting || orderConfirmed || !catalogReady || catalogLoading) {
         return
     }
 
     if (cartList[index].quantity > 1) {
         currentOrderId = null
         currentRequestKey = null
+        requestFingerprint = null
         cartList[index].quantity--
     }
 
@@ -363,12 +467,13 @@ function cartMinus(index) {
 }
 
 function removeFromCart(index) {
-    if (orderSubmitting || orderConfirmed) {
+    if (orderSubmitting || orderConfirmed || !catalogReady || catalogLoading) {
         return
     }
     
     currentOrderId = null
     currentRequestKey = null
+    requestFingerprint = null
     cartList.splice(index, 1)
 
     updateCart()
@@ -394,47 +499,47 @@ function getOrderData() {
 }
 
 async function sendOrderToSupabase() {
-    if (orderSubmitting) {
-        return {
-            success: false,
-            error: 'Um pedido já está sendo enviado.'
-        }
+    if (orderSubmitting || orderConfirmed) {
+        return { success: false, error: 'Este pedido já está sendo processado.' }
     }
 
     orderSubmitting = true
+    setConfirmButtonLoading(true)
 
     try {
         const response = await fetch(CREATE_ORDER_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(getOrderData())
         })
 
-        const result = await response.json()
-
-        if (!response.ok) {
-            console.error('Erro ao enviar pedido:', result.error)
-
+        let result
+        try {
+            result = await response.json()
+        } catch {
             return {
                 success: false,
-                error: result.error || 'Não foi possível registrar o pedido.'
+                error: 'Resposta inesperada. Não sabemos se o pedido foi registrado. Confira antes de reenviar.'
+            }
+        }
+
+        if (!response.ok || !result?.success) {
+            return {
+                success: false,
+                error: result?.error || 'Não foi possível registrar o pedido.'
             }
         }
 
         return result
-
     } catch (error) {
-        console.error('Erro de comunicação:', error)
-
+        console.error('Falha na comunicação com o Supabase:', error)
         return {
             success: false,
-            error: 'Erro de conexão. Verifique sua internet e tente novamente.'
+            error: 'Falha de conexão. O pedido pode ter chegado ao servidor. Confira antes de tentar novamente usando os mesmos dados.'
         }
-
     } finally {
         orderSubmitting = false
+        setConfirmButtonLoading(false)
     }
 }
 
@@ -449,6 +554,10 @@ function updateCartQt() {
 }
 
 function openCheckout() {
+    if (!catalogReady && !orderConfirmed) {
+        alert('Aguarde a atualização do cardápio ou tente novamente.')
+        return
+    }
     if (orderConfirmed) {
         cart.style.display = 'none'
         checkoutScreen.style.display = 'block'
@@ -464,13 +573,16 @@ function openCheckout() {
     checkoutScreen.style.display = 'block'
 
     updateCheckout()
+    updateCheckoutCatalogStatus()
 }
 
 function closeCheckout() {
+    if (orderSubmitting) return
     checkoutScreen.style.display = 'none'
 }
 
 function backToCart() {
+    if (orderSubmitting || orderConfirmed) return
     checkoutScreen.style.display = 'none'
     openCart()
 }
@@ -549,6 +661,16 @@ function validatePayment() {
 }
 
 function validateCheckout() {
+    if (orderSubmitting || orderConfirmed || catalogLoading) return
+    if (!catalogReady) {
+        alert('Cardápio não carregado. Tente novamente.')
+        return
+    }
+    if (cartList.some(item => !isProductAvailable(item.productId))) {
+        alert('Há um produto indisponível no carrinho. Remova-o para continuar.')
+        return
+    }
+    if (orderSubmitting || orderConfirmed) return
     clearCheckoutErrors()
 
     if (cartList.length === 0) {
@@ -578,7 +700,9 @@ function startNewOrder() {
     cartList = []
     currentOrderId = null
     currentRequestKey = null
+    requestFingerprint = null
     orderConfirmed = false
+    confirmedOrder = null
 
     // Limpa o formulário
     customerName.value = ''
@@ -604,49 +728,76 @@ function startNewOrder() {
     rollToMenu()
 }
 
+function formatPrice(value) {
+    return Number(value).toFixed(2).replace('.', ',')
+}
+
 function showOrderSuccess(orderId, total) {
     orderConfirmed = true
+    currentOrderId = String(orderId)
+    confirmedOrder = {
+        id: String(orderId),
+        total: Number(total),
+        name: customerName.value.trim(),
+        phone: customerPhone.value.trim(),
+        payment: getPaymentName(),
+        notes: orderNotes.value.trim(),
+        items: cartList.map(item => ({ ...item }))
+    }
 
-    const successArea = document.querySelector('#orderSuccess')
-    const orderIdElement = document.querySelector('#confirmedOrderId')
-    const orderTotalElement = document.querySelector('#confirmedOrderTotal')
-
-    orderIdElement.textContent = orderId
-
-    orderTotalElement.textContent = Number(total)
-        .toFixed(2)
-        .replace('.', ',')
-
+    document.querySelector('#confirmedOrderId').textContent = String(orderId)
+    document.querySelector('#confirmedOrderTotal').textContent = formatPrice(total)
     document.querySelector('.checkoutForm').style.display = 'none'
     document.querySelector('.checkoutSummary').style.display = 'none'
-    document.querySelector('.checkoutActions').style.display = 'none' 
-
-    successArea.style.display = 'block'
+    document.querySelector('.checkoutActions').style.display = 'none'
+    document.querySelector('#orderSuccess').style.display = 'block'
 }
 
 async function confirmOrderOnSite() {
-    if (orderSubmitting || orderConfirmed) {
+    if (orderSubmitting || orderConfirmed || catalogLoading) return
+    setConfirmButtonLoading(true)
+    // Reconsulta antes de criar um pedido: preço e disponibilidade podem ter mudado.
+    const loaded = await refreshCatalog()
+    setConfirmButtonLoading(false)
+    if (!loaded) {
+        alert('Não foi possível atualizar o cardápio. Tente novamente mais tarde.')
         return
     }
-
-    setConfirmButtonLoading(true)
-
-    try {
-        const result = await sendOrderToSupabase()
-
-        if (result.success) {
-            console.log('Pedido confirmado:', result.order_id)
-            console.log('Total oficial:', result.total)
-
-            showOrderSuccess(result.order_id, result.total)
-        } else {
-            console.error('Pedido não confirmado:', result.error)
-            alert(result.error || 'Não foi possível confirmar o pedido.')
-        }
-
-    } finally {
-        setConfirmButtonLoading(false)
+    if (cartList.some(item => !isProductAvailable(item.productId))) {
+        alert('Um item ficou indisponível. Remova-o do carrinho antes de continuar.')
+        return
     }
+    const result = await sendOrderToSupabase()
+
+    if (result.success) {
+        showOrderSuccess(result.order_id, result.total)
+    } else {
+        alert(result.error || 'Não foi possível confirmar o pedido.')
+    }
+}
+
+function sendConfirmedOrderToWhatsApp() {
+    if (!orderConfirmed || !confirmedOrder) return
+
+    const order = confirmedOrder
+    const lines = [
+        '🍔 *BURGER EM CASA*', '',
+        '*PEDIDO JÁ CONFIRMADO PELO SITE*',
+        `*ID: #${order.id}*`, '',
+        `*Cliente:* ${order.name}`,
+        `*WhatsApp:* ${order.phone}`,
+        `*Pagamento:* ${order.payment}`, '', '*ITENS*', ''
+    ]
+
+    order.items.forEach(item => {
+        lines.push(`*${item.quantity}x ${item.name} - ${item.variation}*`)
+    })
+    lines.push('', `*TOTAL OFICIAL: R$ ${formatPrice(order.total)}*`)
+    if (order.notes) lines.push('', '*Observações:*', order.notes)
+    lines.push('', '_Pedido já registrado. Mensagem enviada somente se desejar._')
+
+    const url = `https://wa.me/${restaurantPhone}?text=${encodeURIComponent(lines.join('\n'))}`
+    window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 customerPhone.addEventListener('input', function () {
@@ -706,59 +857,6 @@ function getPaymentName() {
     return ''
 }
 
-function createOrderMessage() {
-    let message = ''
-    let total = 0
-
-    message += '🍔 *BURGER EM CASA*\n\n'
-    message += '*NOVO PEDIDO*\n'
-    message += `*ID: #${currentOrderId}*\n\n`
-
-    message += `*Cliente:* ${customerName.value.trim()}\n`
-    message += `*WhatsApp:* ${customerPhone.value.trim()}\n`
-    message += `*Pagamento:* ${getPaymentName()}\n\n`
-
-    message += '*PEDIDO*\n\n'
-
-    for (let i = 0; i < cartList.length; i++) {
-        let item = cartList[i]
-
-        let subtotal = item.price * item.quantity
-
-        total += subtotal
-
-        message += `*${item.quantity}x ${item.name} - ${item.variation}*\n`
-        message += `R$ ${subtotal.toFixed(2).replace('.', ',')}\n\n`
-    }
-
-    message += `*TOTAL: R$ ${total.toFixed(2).replace('.', ',')}*\n`
-
-    let notes = orderNotes.value.trim()
-
-    if (notes !== '') {
-        message += '\n*Observações:*\n'
-        message += notes
-    }
-
-    return message
-}
-    
-
-function sendOrderToWhatsApp() {
-    if (currentOrderId === null) {
-        currentOrderId = generateOrderId()
-    }
-
-    let message = createOrderMessage()
-
-    let encodedMessage = encodeURIComponent(message)
-
-    let whatsappUrl =
-        `https://wa.me/${restaurantPhone}?text=${encodedMessage}`
-
-    window.open(whatsappUrl, '_blank')
-}
-
 function updateMenuAvailability() {
     for (let productIndex = 0; productIndex < menuJson.length; productIndex++) {
 
@@ -780,7 +878,7 @@ function updateMenuAvailability() {
                 continue
             }
 
-            let isAvailable = product.available[variationIndex]
+            let isAvailable = catalogReady && product.available[variationIndex]
 
             variationElement.classList.toggle(
                 'menuUnavailable',
@@ -834,3 +932,4 @@ function updateMenuAvailability() {
 
 updateMenuAvailability()
 updateCartQt()
+refreshCatalog()
