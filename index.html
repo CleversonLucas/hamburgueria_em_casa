@@ -191,6 +191,40 @@
 
             <h1>Finalizar pedido</h1>
 
+            <div
+                id="orderSuccess"
+                class="orderSuccess"
+                style="display: none;"
+            >
+                <h2>🍔 Pedido confirmado!</h2>
+                    
+                <p>
+                    Seu pedido foi recebido com sucesso.
+                </p>
+            
+                <p>
+                    <strong>Número do pedido:</strong>
+                    <span id="confirmedOrderId"></span>
+                </p>
+            
+                <p>
+                    <strong>Total:</strong>
+                    R$ <span id="confirmedOrderTotal"></span>
+                </p>
+            
+                <p>
+                    Aguarde a confirmação do preparo.
+                </p>
+
+                <button
+                    type="button"
+                    id="newOrderButton"
+                    onclick="startNewOrder()"
+                >
+                    Fazer novo pedido
+                </button>
+            </div>
+
             <div class="checkoutForm">
 
                 <div class="formGroup">

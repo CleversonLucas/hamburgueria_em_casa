@@ -9,8 +9,9 @@ let menuJson = [
             'Burger 150gr, Queijo Prato, Tomate, Cebola Roxa, Alface e Maionese da casa',
             'Burger 150gr, Cheddar, Tomate, Cebola Caramelizada, Bacon, Maionese da casa e Molho Barbecue'
         ],
-        prices: [31.90, 34.90],
-        available: [true, true]
+        prices: [12.00, 14.00],
+        available: [true, true],
+        productIds: [1, 2]
     },
     {
         id:2,
@@ -22,8 +23,9 @@ let menuJson = [
             'Burger 150gr, Queijo Prato, Queijo Provolone chapeado com Cebola Roxa, Geléia de Pimenta da casa e Maionese da casa',
             'Burger 150gr, Cheddar, Queijo Provolone chapeado com Cebola Roxa, Pimenta Jalapeño, Bacon, Catchup e Maionese da casa'
         ],
-        prices: [33.90, 35.90],
-        available: [false, true]
+        prices: [14.00, 16.00],
+        available: [false, true],
+        productIds: [3, 4]
     },
     {
         id:3,
@@ -35,7 +37,8 @@ let menuJson = [
             '2 Smash Burgers de 90gr, Queijo Prato, Picles, Catchup e Maionese da casa',
             '3 Smash Burgers de 90gr, Cheddar, Cebola Caramelizada, Bacon e Maionese da casa'
         ],
-        prices: [32.90, 36.90],
-        available: [false, false]
+        prices: [14.00, 16.00],
+        available: [false, false],
+        productIds: [5, 6]
     }
 ]

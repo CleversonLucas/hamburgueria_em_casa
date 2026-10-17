@@ -27,9 +27,34 @@ let paymentError = $('#paymentError')
 
 const restaurantPhone = '5519997980495'
 
+const CREATE_ORDER_URL =
+    'https://drtlghafqplrjtafczsg.supabase.co/functions/v1/create-order'
+
 let cartList = []
 
 let currentOrderId = null
+let currentRequestKey = null
+let orderSubmitting = false
+let orderConfirmed = false
+
+function setConfirmButtonLoading(loading) {
+    const button = document.querySelector('.confirmOrder')
+
+    if (!button) return
+
+    button.disabled = loading
+    button.textContent = loading
+        ? 'Enviando pedido...'
+        : 'Confirmar pedido'
+}
+
+function getRequestKey() {
+    if (currentRequestKey === null) {
+        currentRequestKey = crypto.randomUUID()
+    }
+
+    return currentRequestKey
+}
 
 function generateOrderId() {
     const now = new Date()
@@ -210,6 +235,10 @@ function closeCart() {
 }
 
 function addToCart() {
+    if (orderSubmitting || orderConfirmed) {
+        return
+    }
+
     let variation
     let price
     let variationIndex
@@ -228,6 +257,8 @@ function addToCart() {
 
     currentOrderId = null
 
+    currentRequestKey = null
+
     variation = menuJson[key].variation[variationIndex]
     price = menuJson[key].prices[variationIndex]
 
@@ -241,6 +272,7 @@ function addToCart() {
     } else {
         cartList.push({
             id: menuJson[key].id,
+            productId: menuJson[key].productIds[variationIndex],
             name: menuJson[key].name,
             variation: variation,
             price: price,
@@ -303,7 +335,12 @@ function updateCart() {
 }
 
 function cartPlus(index) {
+    if (orderSubmitting || orderConfirmed) {
+        return
+    }
+
     currentOrderId = null
+    currentRequestKey = null
     cartList[index].quantity++
 
     updateCart()
@@ -311,8 +348,13 @@ function cartPlus(index) {
 }
 
 function cartMinus(index) {
-    currentOrderId = null
+    if (orderSubmitting || orderConfirmed) {
+        return
+    }
+
     if (cartList[index].quantity > 1) {
+        currentOrderId = null
+        currentRequestKey = null
         cartList[index].quantity--
     }
 
@@ -321,11 +363,79 @@ function cartMinus(index) {
 }
 
 function removeFromCart(index) {
+    if (orderSubmitting || orderConfirmed) {
+        return
+    }
+    
     currentOrderId = null
+    currentRequestKey = null
     cartList.splice(index, 1)
 
     updateCart()
     updateCartQt()
+}
+
+function getOrderItems() {
+    return cartList.map(item => ({
+        product_id: item.productId,
+        quantity: item.quantity
+    }))
+}
+
+function getOrderData() {
+    return {
+        customer_name: customerName.value.trim(),
+        customer_phone: customerPhone.value.replace(/\D/g, ''),
+        payment_method: paymentMethod.value,
+        notes: orderNotes.value.trim(),
+        items: getOrderItems(),
+        request_key: getRequestKey()
+    }
+}
+
+async function sendOrderToSupabase() {
+    if (orderSubmitting) {
+        return {
+            success: false,
+            error: 'Um pedido já está sendo enviado.'
+        }
+    }
+
+    orderSubmitting = true
+
+    try {
+        const response = await fetch(CREATE_ORDER_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(getOrderData())
+        })
+
+        const result = await response.json()
+
+        if (!response.ok) {
+            console.error('Erro ao enviar pedido:', result.error)
+
+            return {
+                success: false,
+                error: result.error || 'Não foi possível registrar o pedido.'
+            }
+        }
+
+        return result
+
+    } catch (error) {
+        console.error('Erro de comunicação:', error)
+
+        return {
+            success: false,
+            error: 'Erro de conexão. Verifique sua internet e tente novamente.'
+        }
+
+    } finally {
+        orderSubmitting = false
+    }
 }
 
 function updateCartQt() {
@@ -339,6 +449,12 @@ function updateCartQt() {
 }
 
 function openCheckout() {
+    if (orderConfirmed) {
+        cart.style.display = 'none'
+        checkoutScreen.style.display = 'block'
+        return
+    }
+
     if (cartList.length === 0) {
         alert('Seu carrinho está vazio.')
         return
@@ -450,7 +566,87 @@ function validateCheckout() {
         return
     }
 
-    sendOrderToWhatsApp()
+    confirmOrderOnSite()
+}
+
+function startNewOrder() {
+    if (orderSubmitting) {
+        return
+    }
+
+    // Limpa os dados do pedido anterior
+    cartList = []
+    currentOrderId = null
+    currentRequestKey = null
+    orderConfirmed = false
+
+    // Limpa o formulário
+    customerName.value = ''
+    customerPhone.value = ''
+    paymentMethod.value = ''
+    orderNotes.value = ''
+
+    clearCheckoutErrors()
+
+    // Restaura os elementos do checkout
+    document.querySelector('#orderSuccess').style.display = 'none'
+    document.querySelector('.checkoutForm').style.display = ''
+    document.querySelector('.checkoutSummary').style.display = ''
+    document.querySelector('.checkoutActions').style.display = ''
+
+    // Atualiza o carrinho
+    updateCart()
+    updateCartQt()
+
+    // Fecha o checkout e retorna ao cardápio
+    closeCheckout()
+    closeCart()
+    rollToMenu()
+}
+
+function showOrderSuccess(orderId, total) {
+    orderConfirmed = true
+
+    const successArea = document.querySelector('#orderSuccess')
+    const orderIdElement = document.querySelector('#confirmedOrderId')
+    const orderTotalElement = document.querySelector('#confirmedOrderTotal')
+
+    orderIdElement.textContent = orderId
+
+    orderTotalElement.textContent = Number(total)
+        .toFixed(2)
+        .replace('.', ',')
+
+    document.querySelector('.checkoutForm').style.display = 'none'
+    document.querySelector('.checkoutSummary').style.display = 'none'
+    document.querySelector('.checkoutActions').style.display = 'none' 
+
+    successArea.style.display = 'block'
+}
+
+async function confirmOrderOnSite() {
+    if (orderSubmitting || orderConfirmed) {
+        return
+    }
+
+    setConfirmButtonLoading(true)
+
+    try {
+        const result = await sendOrderToSupabase()
+
+        if (result.success) {
+            console.log('Pedido confirmado:', result.order_id)
+            console.log('Total oficial:', result.total)
+
+            showOrderSuccess(result.order_id, result.total)
+        } else {
+            console.error('Pedido não confirmado:', result.error)
+            alert(result.error || 'Não foi possível confirmar o pedido.')
+        }
+
+    } finally {
+        setConfirmButtonLoading(false)
+    }
 }
 
 customerPhone.addEventListener('input', function () {
