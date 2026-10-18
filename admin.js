@@ -26,6 +26,9 @@ let products = [];
 let productsLoading = false;
 let productSaving = false;
 let productsGeneration = 0;
+let eventGeneration = 0;
+let eventBusy = false;
+let eventSnapshot = null;
 let refreshGeneration = 0;
 const STATUS_OPTIONS = [
   ['novo', 'Novo'],
@@ -115,6 +118,8 @@ function showLogin(message = '') {
   orders = [];
   selectedId = null;
   productsGeneration++;
+  eventGeneration++;
+  eventSnapshot = null;
   products = [];
   currentSection = 'orders';
   $('#ordersView').hidden = false;
@@ -335,15 +340,19 @@ async function saveOrderStatus(orderId, previousStatus, nextStatus, button, feed
 
 // Cardápio — leituras e alterações restritas a administradores pelas políticas RLS.
 function switchSection(section) {
-  if (!['orders', 'products'].includes(section)) return;
+  if (!['orders', 'products', 'event'].includes(section)) return;
   currentSection = section;
   $('#ordersView').hidden = section !== 'orders';
   $('#productsView').hidden = section !== 'products';
+  $('#eventView').hidden = section !== 'event';
   $('#ordersTab').className = `button ${section === 'orders' ? 'primary' : 'secondary'}`;
   $('#productsTab').className = `button ${section === 'products' ? 'primary' : 'secondary'}`;
+  $('#eventTab').className = `button ${section === 'event' ? 'primary' : 'secondary'}`;
   $('#ordersTab').setAttribute('aria-current', section === 'orders' ? 'page' : 'false');
   $('#productsTab').setAttribute('aria-current', section === 'products' ? 'page' : 'false');
+  $('#eventTab').setAttribute('aria-current', section === 'event' ? 'page' : 'false');
   if (section === 'products') loadProducts();
+  else if (section === 'event') loadEventSettings();
   else if (dashboardActive) loadOrders({silent:true});
 }
 async function loadProducts() {
@@ -422,6 +431,84 @@ async function saveProduct(product,priceInput,availableInput,button,feedback) {
   }
 }
 
+
+// FASE 13.2 — Programação de eventos.
+function brasiliaToday() {
+  return new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+}
+function updateEventPreview() {
+  const date = $('#eventDate').value;
+  const enabled = $('#ordersEnabled').checked;
+  const today = brasiliaToday();
+  const text = !date ? 'Sem data programada — pedidos indisponíveis.'
+    : date < today ? 'Missão encerrada — pedidos indisponíveis.'
+    : enabled ? 'Missão programada — pedidos antecipados habilitados.'
+    : 'Missão programada — recebimento de pedidos pausado.';
+  $('#eventPreview').textContent = text;
+}
+async function loadEventSettings() {
+  if (!dashboardActive || eventBusy) return;
+  eventBusy = true;
+  const generation = eventGeneration;
+  $('#reloadEventButton').disabled = true;
+  showMessage('#eventMessage','Consultando programação...');
+  try {
+    const {data,error} = await supabaseClient.from('event_settings')
+      .select('id,event_date,orders_enabled').eq('id',true).single();
+    if (error) throw new Error('Não foi possível carregar a missão. Confira a tabela event_settings e suas permissões.');
+    if (generation !== eventGeneration || !dashboardActive) return;
+    eventSnapshot = data;
+    $('#eventDate').value = data.event_date || '';
+    $('#ordersEnabled').checked = Boolean(data.orders_enabled);
+    updateEventPreview();
+    showMessage('#eventMessage','Programação carregada.');
+  } catch (error) { showMessage('#eventMessage',error.message || 'Falha ao consultar evento.'); }
+  finally { eventBusy = false; $('#reloadEventButton').disabled = false; }
+}
+async function saveEventSettings(event) {
+  if (event) event.preventDefault();
+  if (!dashboardActive || eventBusy || !eventSnapshot) return;
+  const nextDate = $('#eventDate').value || null;
+  const nextEnabled = $('#ordersEnabled').checked;
+  if (nextEnabled && (!nextDate || nextDate < brasiliaToday())) {
+    showMessage('#eventMessage','Para ativar pedidos, informe a data de hoje ou uma data futura.');
+    return;
+  }
+  if (nextDate && !/^\d{4}-\d{2}-\d{2}$/.test(nextDate)) {
+    showMessage('#eventMessage','Informe uma data válida.');return;
+  }
+  eventBusy = true;
+  $('#saveEventButton').disabled = true;
+  $('#reloadEventButton').disabled = true;
+  $('#clearEventButton').disabled = true;
+  showMessage('#eventMessage','Salvando programação...');
+  try {
+    // A verificação da versão anterior evita sobrescrever silenciosamente outra edição.
+    let query = supabaseClient.from('event_settings')
+      .update({event_date:nextDate,orders_enabled:nextEnabled})
+      .eq('id',true).eq('orders_enabled',eventSnapshot.orders_enabled);
+    query = eventSnapshot.event_date === null ? query.is('event_date',null) : query.eq('event_date',eventSnapshot.event_date);
+    const {data,error} = await query.select('id,event_date,orders_enabled');
+    if (error) throw new Error('Não foi possível salvar a missão. Confira as permissões do administrador.');
+    if (data?.length !== 1) throw new Error('A programação foi alterada por outra sessão. Recarregue antes de salvar.');
+    eventSnapshot = data[0];
+    updateEventPreview();
+    showMessage('#eventMessage','Missão salva com sucesso no Supabase.');
+  } catch (error) {showMessage('#eventMessage',error.message || 'Erro ao salvar programação.');}
+  finally {
+    eventBusy = false;
+    $('#saveEventButton').disabled = false;
+    $('#reloadEventButton').disabled = false;
+    $('#clearEventButton').disabled = false;
+  }
+}
+function clearEventDate() {
+  $('#eventDate').value = '';
+  $('#ordersEnabled').checked = false;
+  updateEventPreview();
+  showMessage('#eventMessage','Data removida do formulário. Clique em "Salvar missão" para confirmar.');
+}
+
 $('#loginForm').addEventListener('submit',login);
 $('#logoutButton').addEventListener('click',logout);
 $('#refreshButton').addEventListener('click',loadOrders);
@@ -429,6 +516,12 @@ $('#statusFilter').addEventListener('change',renderOrders);
 $('#soundButton').addEventListener('click',toggleSound);
 $('#ordersTab').addEventListener('click',()=>switchSection('orders'));
 $('#productsTab').addEventListener('click',()=>switchSection('products'));
+$('#eventTab').addEventListener('click',()=>switchSection('event'));
+$('#eventForm').addEventListener('submit',saveEventSettings);
+$('#reloadEventButton').addEventListener('click',loadEventSettings);
+$('#clearEventButton').addEventListener('click',clearEventDate);
+$('#eventDate').addEventListener('input',updateEventPreview);
+$('#ordersEnabled').addEventListener('change',updateEventPreview);
 $('#reloadProductsButton').addEventListener('click',loadProducts);
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && dashboardActive) loadOrders({ silent: true });

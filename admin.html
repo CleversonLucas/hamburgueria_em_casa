@@ -28,7 +28,7 @@
       <p id="loginMessage" class="message" role="status" aria-live="polite"></p>
     </section>
     <section id="dashboardSection" hidden>
-      <nav class="admin-tabs" aria-label="Seções do painel"><button class="button primary" type="button" id="ordersTab" aria-current="page">Pedidos</button><button class="button secondary" type="button" id="productsTab">Gerenciar cardápio</button></nav>
+      <nav class="admin-tabs" aria-label="Seções do painel"><button class="button primary" type="button" id="ordersTab" aria-current="page">Pedidos</button><button class="button secondary" type="button" id="productsTab">Gerenciar cardápio</button><button class="button secondary" type="button" id="eventTab">Próxima missão</button></nav>
       <div id="ordersView">
       <div class="toolbar panel"><div><div class="section-tag">MONITORAMENTO</div><h2>Pedidos recebidos</h2></div><div class="toolbar-actions"><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Todos</option></select><button type="button" id="refreshButton" class="button primary">Atualizar pedidos</button></div></div>
       <div class="monitor-bar panel">
@@ -41,6 +41,20 @@
       <div class="columns"><section class="panel"><h3>Lista de pedidos</h3><div id="ordersList" class="orders-list"><p class="muted">Nenhum pedido carregado.</p></div></section><section class="panel"><h3>Detalhes da missão</h3><div id="orderDetails" class="details"><p class="muted">Selecione um pedido para visualizar os detalhes.</p></div></section></div>
       <p class="hint">Exibindo os 100 pedidos mais recentes. Selecione um pedido para atualizar seu status. As mudanças são registradas no Supabase.</p>
       </div>
+      <section id="eventView" class="panel" hidden>
+        <div class="section-tag">CENTRAL DE OPERAÇÕES // EVENTO</div>
+        <h2>Próxima missão</h2>
+        <p class="hint">Programe o encontro e controle se os pedidos antecipados podem ser recebidos. A data é avaliada pelo calendário de Brasília.</p>
+        <form id="eventForm" class="event-form">
+          <label for="eventDate">Data da missão</label>
+          <input type="date" id="eventDate">
+          <label class="event-toggle"><input type="checkbox" id="ordersEnabled"><span>Aceitar pedidos antecipados</span></label>
+          <p id="eventPreview" class="event-preview" role="status"></p>
+          <div class="event-actions"><button type="submit" id="saveEventButton" class="button primary">Salvar missão</button><button type="button" id="reloadEventButton" class="button secondary">Recarregar</button><button type="button" id="clearEventButton" class="button secondary">Remover data</button></div>
+          <p id="eventMessage" class="message" role="status" aria-live="polite"></p>
+        </form>
+        <p class="hint">Sem data, com data passada ou com os pedidos pausados, a missão não aceita vendas. A Edge Function também valida a programação antes de registrar pedidos.</p>
+      </section>
       <section id="productsView" class="panel" hidden>
         <div class="products-heading"><div><div class="section-tag">CONTROLE DE ESTOQUE // CARDÁPIO</div><h2>Preços e disponibilidade</h2></div><button class="button secondary" id="reloadProductsButton" type="button">Atualizar produtos</button></div>
         <p class="hint">Os preços e a disponibilidade ficam no Supabase. O site público carrega os valores oficiais quando o cardápio é atualizado.</p>

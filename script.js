@@ -34,6 +34,95 @@ const SUPABASE_URL = 'https://drtlghafqplrjtafczsg.supabase.co'
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_1wpk2x4aW66NANfoMP6JIA_2hhkSE9w'
 const PRODUCTS_URL = `${SUPABASE_URL}/rest/v1/products?select=id,name,variation,price,available&order=id.asc`
 
+// FASE 13.2 — Programação oficial: acesso público apenas à data e ao status.
+const EVENT_SETTINGS_URL = `${SUPABASE_URL}/rest/v1/event_settings?select=event_date,orders_enabled&id=eq.true`
+const MISSION_RECHECK_MS = 60 * 1000
+let mission = { loaded: false, allowed: false, date: null, enabled: false }
+let missionLastCheck = 0
+let missionPromise = null
+
+function brazilToday() {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date())
+    const part = type => parts.find(p => p.type === type)?.value
+    return `${part('year')}-${part('month')}-${part('day')}`
+}
+
+function missionAvailable() {
+    // Avalia a data em toda interação, inclusive depois da meia-noite em Brasília.
+    return mission.loaded && mission.enabled && Boolean(mission.date) && mission.date >= brazilToday()
+}
+
+function updateMissionUi() {
+    mission.allowed = missionAvailable()
+    const dateEl = $('#date')
+    const label = document.querySelector('.date > p:first-child')
+    if (dateEl) {
+        if (!mission.loaded) {
+            dateEl.textContent = 'Programação indisponível'
+        } else if (mission.date && mission.date >= brazilToday()) {
+            const [year, month, day] = mission.date.split('-')
+            dateEl.textContent = `${day}/${month}/${year}`
+        } else {
+            dateEl.textContent = 'Planejando nova missão'
+        }
+    }
+    if (label) label.textContent = mission.loaded && mission.date && mission.date >= brazilToday()
+        ? 'Próxima missão:' : 'Status da missão:'
+    if (modal?.style.display === 'flex') updateAvailability()
+    updateCheckoutCatalogStatus()
+}
+
+function missionNotice(message = '') {
+    const notice = $('#missionCartNotice')
+    if (!notice) return
+    notice.textContent = message
+    notice.hidden = !message
+}
+
+function unavailableMissionMessage() {
+    if (!mission.loaded) return 'Não foi possível verificar a programação. Tente novamente em instantes.'
+    if (mission.date && mission.date >= brazilToday() && !mission.enabled) {
+        return 'Missão em preparação. Os pedidos ainda não foram liberados para este evento.'
+    }
+    return 'Nenhuma missão está recebendo pedidos no momento. Explore o cardápio e aguarde a próxima missão!'
+}
+
+async function refreshMission(force = false) {
+    if (missionPromise) return missionPromise
+    if (!force && mission.loaded && Date.now() - missionLastCheck < MISSION_RECHECK_MS) {
+        updateMissionUi()
+        return missionAvailable()
+    }
+    missionPromise = (async () => {
+        try {
+            const response = await fetch(EVENT_SETTINGS_URL, {
+                headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Accept: 'application/json' },
+                cache: 'no-store'
+            })
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
+            const rows = await response.json()
+            if (!Array.isArray(rows) || rows.length !== 1 ||
+                (rows[0].event_date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(rows[0].event_date)) ||
+                typeof rows[0].orders_enabled !== 'boolean') throw new Error('Programação inválida')
+            mission = { loaded: true, date: rows[0].event_date,
+                enabled: rows[0].orders_enabled, allowed: false }
+            missionLastCheck = Date.now()
+        } catch (error) {
+            console.error('Não foi possível consultar a missão:', error)
+            // Falha segura: nunca libera pedido quando não consegue validar a missão.
+            mission = { loaded: false, date: null, enabled: false, allowed: false }
+            missionLastCheck = 0
+        } finally {
+            missionPromise = null
+            updateMissionUi()
+        }
+        return missionAvailable()
+    })()
+    return missionPromise
+}
+
 let catalogReady = false
 let catalogLoading = false
 let catalogPromise = null
@@ -72,9 +161,11 @@ function updateCheckoutCatalogStatus() {
     const blocked = cartList.some(item => !isProductAvailable(item.productId))
     el.textContent = !catalogReady
         ? 'Cardápio indisponível. Aguarde ou tente atualizar antes de confirmar.'
-        : blocked
-            ? 'Seu carrinho contém um produto indisponível. Remova-o para continuar.'
-            : ''
+        : !missionAvailable()
+            ? unavailableMissionMessage()
+            : blocked
+                ? 'Seu carrinho contém um produto indisponível. Remova-o para continuar.'
+                : ''
     el.style.display = el.textContent ? 'block' : 'none'
 }
 
@@ -274,16 +365,17 @@ function updateAvailability() {
         addButton.disabled = true
         addButton.innerHTML = 'Indisponível'
         addButton.classList.add('disabled')
+        addButton.classList.remove('missionClosedButton')
     } else {
         addButton.disabled = false
-        addButton.innerHTML = `
-            <span class="material-symbols-outlined">
-                add_shopping_cart
-            </span>
-            Carrinho
-        `
+        addButton.innerHTML = missionAvailable() ? `
+            <span class="material-symbols-outlined">add_shopping_cart</span> Carrinho
+        ` : '<span class="material-symbols-outlined">event_busy</span> Missão indisponível'
         addButton.classList.remove('disabled')
+        addButton.classList.toggle('missionClosedButton', !missionAvailable())
     }
+    if (!missionAvailable()) missionNotice(unavailableMissionMessage())
+    else missionNotice('')
 }
 
 function selectBlue() {
@@ -334,7 +426,12 @@ function closeCart() {
     cart.style.display = 'none'
 }
 
-function addToCart() {
+async function addToCart() {
+    if (!(await refreshMission(true))) {
+        missionNotice(unavailableMissionMessage())
+        updateAvailability()
+        return false
+    }
     if (orderSubmitting || orderConfirmed || !catalogReady || catalogLoading) {
         return
     }
@@ -661,6 +758,12 @@ function validatePayment() {
 }
 
 function validateCheckout() {
+    if (!missionAvailable()) {
+        const status = $('#checkoutCatalogStatus')
+        if (status) { status.textContent = unavailableMissionMessage(); status.style.display = 'block' }
+        refreshMission(true)
+        return
+    }
     if (orderSubmitting || orderConfirmed || catalogLoading) return
     if (!catalogReady) {
         alert('Cardápio não carregado. Tente novamente.')
@@ -755,6 +858,10 @@ function showOrderSuccess(orderId, total) {
 
 async function confirmOrderOnSite() {
     if (orderSubmitting || orderConfirmed || catalogLoading) return
+    if (!(await refreshMission(true))) {
+        updateCheckoutCatalogStatus()
+        return
+    }
     setConfirmButtonLoading(true)
     // Reconsulta antes de criar um pedido: preço e disponibilidade podem ter mudado.
     const loaded = await refreshCatalog()
@@ -765,6 +872,10 @@ async function confirmOrderOnSite() {
     }
     if (cartList.some(item => !isProductAvailable(item.productId))) {
         alert('Um item ficou indisponível. Remova-o do carrinho antes de continuar.')
+        return
+    }
+    if (!(await refreshMission(true))) {
+        updateCheckoutCatalogStatus()
         return
     }
     const result = await sendOrderToSupabase()
@@ -933,3 +1044,7 @@ function updateMenuAvailability() {
 updateMenuAvailability()
 updateCartQt()
 refreshCatalog()
+
+refreshMission(true)
+setInterval(() => { if (!document.hidden) refreshMission(true) }, MISSION_RECHECK_MS)
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshMission(true) })

@@ -24,3 +24,13 @@
 .product-editor input[type=checkbox]{width:20px;height:20px;accent-color:var(--blue)}
 .product-editor .message{margin:0}.product-editor .button{justify-self:start}
 @media(max-width:650px){.admin-tabs .button{flex:1}.products-heading button{width:100%}}
+
+/* FASE 13.2 — Próxima missão */
+.event-form{max-width:680px;display:grid;gap:13px;margin-top:20px}
+.event-form>label:not(.event-toggle){font-size:18px}
+.event-form input[type=date]{max-width:340px;color-scheme:dark}
+.event-toggle{display:flex;align-items:center;gap:12px;background:#091f2c;border:1px solid var(--edge);border-radius:7px;padding:16px;font-size:20px;color:var(--text)}
+.event-toggle input{width:22px;height:22px;accent-color:var(--blue)}
+.event-preview{border-left:3px solid var(--blue);padding:13px 16px;background:#081f2b;margin:2px 0;font-size:19px}
+.event-actions{display:flex;flex-wrap:wrap;gap:10px}
+@media(max-width:600px){.event-actions .button{flex:1}.event-form input[type=date]{max-width:100%}}

@@ -1691,3 +1691,19 @@ header .nav {
         font-size: 14px;
     }
 }
+
+/* FASE 13.2 — Exibição da missão / aviso no modal */
+.date #date { overflow-wrap: anywhere; font-size: clamp(23px, 2.7vw, 42px); line-height: 1.15; }
+.missionCartNotice {
+    margin: 20px 0 0; padding: 13px 16px; color: #f2dfb1;
+    background: rgba(216,169,61,.09); border: 1px solid rgba(216,169,61,.38);
+    border-left: 3px solid #d8a93d; border-radius: 5px;
+    font-size: 17px; line-height: 1.35;
+}
+.missionCartNotice[hidden] { display: none !important; }
+.addCart button.missionClosedButton {
+    color: #f2dfb1; background: rgba(216,169,61,.11);
+    border-color: rgba(216,169,61,.48); box-shadow: none;
+}
+.addCart button.missionClosedButton:hover { background: rgba(216,169,61,.18); }
+@media(max-width:600px) { .date #date { font-size: 27px; } .missionCartNotice { font-size: 16px; } }
