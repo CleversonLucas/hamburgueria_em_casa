@@ -2,7 +2,7 @@ let menuJson = [
     {
         id:1,
         name: 'Shepard',
-        image: ['images/paragon.jpg', 'images/renegado.jpg'],
+        image: ['images/paragon2.jpeg', 'images/renegado.jpg'],
         description: ['Paragon ou Renegado? Dois caminhos, uma missão: salvar a galáxia da fome.'],
         variation: ['Paragon', 'Renegado'],
         ingredients: [
@@ -16,7 +16,7 @@ let menuJson = [
     {
         id:2,
         name: 'Asari',
-        image: ['images/liara.jpg', 'images/justicar.jpg'],
+        image: ['images/liara2.jpg', 'images/justicar.jpg'],
         description: ['Séculos de sabedoria, um universo de sabores. Elegância e intensidade em cada mordida.'],
         variation: ['Liara', 'Justicar'],
         ingredients: [
